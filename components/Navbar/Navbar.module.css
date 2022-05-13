@@ -1,0 +1,21 @@
+.navbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+  background-color: rgb(164, 59, 59);
+  color: #fff;
+  margin: 0;
+}
+
+.navitems {
+  display: flex;
+  align-items: center;
+  list-style: none;
+  font-size: 18px;
+}
+.navitems > li {
+  margin-left: 30px;
+}
+.navitems > li:hover {
+    color: aqua;
+  }
