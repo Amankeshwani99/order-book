@@ -1,8 +1,8 @@
-export interface graphDataType {
-    Date: number;
-    Open: number;
-    Close: number;
-    High: number;
-    Low: number;
-    Volume: number;
+export interface OhlcData {
+    date: number;
+    open: number;
+    close: number;
+    high: number;
+    low: number;
+    volume: number;
 }
