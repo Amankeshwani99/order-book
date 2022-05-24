@@ -3,6 +3,25 @@ import * as am5xy from "@amcharts/amcharts5/xy";
 import am5themes_Animated from "@amcharts/amcharts5/themes/Animated";
 import * as am5stock from "@amcharts/amcharts5/stock";
 import { OhlcData } from "../../type";
+
+enum ChartTimePeriod {
+  TimeUnitMonth = "month",
+  TimeUnitDay7 = "day",
+  TimeUnitDay3 = "day",
+  TimeUnitHour = "hour",
+}
+enum ChartTimePeriodCount {
+  TimeCountMonth = 1,
+  TimeCountDay7 = 7,
+  TimeCountDay3 = 3,
+  TimeCountHour = 6,
+}
+enum ChartTimePeriodName {
+  TimeNameMonth = "1m",
+  TimeNameDay7 = "7d",
+  TimeNameDay3 = "3d",
+  TimeNameHour = "6h",
+}
 export const drawGraph = (root: any, graphData: OhlcData[]) => {
   root.setThemes([am5themes_Animated.new(root)]);
 
@@ -188,10 +207,26 @@ export const drawGraph = (root: any, graphData: OhlcData[]) => {
       am5stock.PeriodSelector.new(root, {
         stockChart: stockChart,
         periods: [
-          { timeUnit: "month", count: 1, name: "1m" },
-          { timeUnit: "day", count: 7, name: "7d" },
-          { timeUnit: "day", count: 3, name: "3d" },
-          { timeUnit: "hour", count: 6, name: "6h" },
+          {
+            timeUnit: ChartTimePeriod.TimeUnitMonth,
+            count: ChartTimePeriodCount.TimeCountMonth,
+            name: ChartTimePeriodName.TimeNameMonth,
+          },
+          {
+            timeUnit: ChartTimePeriod.TimeUnitDay7,
+            count: ChartTimePeriodCount.TimeCountDay7,
+            name: ChartTimePeriodName.TimeNameDay7,
+          },
+          {
+            timeUnit: ChartTimePeriod.TimeUnitDay3,
+            count: ChartTimePeriodCount.TimeCountDay3,
+            name: ChartTimePeriodName.TimeNameDay3,
+          },
+          {
+            timeUnit: ChartTimePeriod.TimeUnitHour,
+            count: ChartTimePeriodCount.TimeCountHour,
+            name: ChartTimePeriodName.TimeNameHour,
+          },
         ],
       }),
     ],

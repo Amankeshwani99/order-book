@@ -6,3 +6,9 @@ export interface OhlcData {
     low: number;
     volume: number;
 }
+
+export interface OrderBookData{
+    price:number;
+    count:number;
+    amount:number;
+}
