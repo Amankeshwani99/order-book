@@ -4,102 +4,74 @@ import Head from "next/head";
 import { OrderBookData } from "../type";
 import OrderBook from "../components/orderbook/OrderBook";
 import classes from "../styles/table.module.css";
+import {
+  setOrderBookInitialData,
+  setIncomingOrderBookData,
+} from "../utils/orderBook";
+import useWebsockets from "../hooks/use-websocket";
+
 const baseUrl = "wss://api-pub.bitfinex.com/ws/2";
+const hb = "hb";
+enum booksConfig {
+  Event = "subscribe",
+  Channel = "book",
+  Symbol = "tBTCUSD",
+  Freq = "F0",
+  Len = 100,
+}
+
 const Home: NextPage = () => {
   const [asks, setAsks] = useState<OrderBookData[]>([]);
   const [bids, setBids] = useState<OrderBookData[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+  const data = useWebsockets({ baseUrl, onConnected });
+
   useEffect(() => {
-    getOrderbookData();
-  }, []);
+    getOrderbookData(data);
+  }, [data]);
 
-  const setOrderBookInitialData = (dataItems: number[][]) => {
-    let asks: OrderBookData[] = [];
-    let bids: OrderBookData[] = [];
-    dataItems.map((item: number[]) => {
-      enum OrderBook {
-        price = item[0],
-        count = item[1],
-        amount = item[2],
-      }
-      if (OrderBook.count > 0) {
-        let amt = ~~OrderBook.amount;
-        let orderBookItems = {
-          price: OrderBook.price,
-          count: OrderBook.count,
-          amount: Math.abs(OrderBook.amount),
-        };
-        if (amt > 0) {
-          bids.push(orderBookItems);
-        }
-        if (amt < 0) {
-          asks.push(orderBookItems);
-        }
-      }
-    });
-    setAsks(asks);
-    setBids(bids);
-  };
-
-  const setIncomingOrderBookData = (dataItems: number[]) => {
-    const [price, count, amount] = dataItems;
-    let amt: number = ~~amount;
-    let item: OrderBookData = {
-      price,
-      count,
-      amount: Math.abs(amount),
+  function onConnected(socket: any) {
+    const subscription = {
+      event: booksConfig.Event,
+      channel: booksConfig.Channel,
+      symbol: booksConfig.Symbol,
+      freq: booksConfig.Freq,
+      len: booksConfig.Len,
     };
-    if (count > 0) {
-      if (amt > 0) {
-        setBids((prev) => [item, ...prev]);
-      }
-      if (amt < 0) {
-        setAsks((prev) => [item, ...prev]);
-      }
-    } else if (count == 0) {
-      if (amt === 1) {
-        let result = bids.filter(function (item: { price: number }) {
-          return price !== item.price;
-        });
-        if (result.length != 0) {
-          setBids(result);
+    socket.send(JSON.stringify(subscription));
+  }
+
+  const getOrderbookData = (orderBook: any) => {
+    setLoading(true);
+    if (orderBook.length != 0) {
+      const [id, dataItems] = orderBook;
+      if (dataItems.length === 3) {
+        const [bid, ask, updatedAsks, updatedBids] = setIncomingOrderBookData(
+          dataItems,
+          asks,
+          bids
+        );
+        if (bid) {
+          setBids((prev) => [bid, ...prev]);
         }
-      } else if (amt === -1) {
-        let result = asks.filter(function (item: { price: number }) {
-          return price !== item.price;
-        });
-        if (result.length != 0) {
-          setAsks(result);
+        if (ask) {
+          setAsks((prev) => [ask, ...prev]);
         }
+        if (updatedBids.length != 0) {
+          setAsks(updatedBids);
+        }
+        if (updatedAsks.length != 0) {
+          setAsks(updatedAsks);
+        }
+      } else if (dataItems != hb && dataItems.length != 0) {
+        const [asks, bids] = setOrderBookInitialData(dataItems);
+        setAsks(asks);
+        setBids(bids);
       }
+      setLoading(false);
     }
   };
-  const getOrderbookData = () => {
-    setLoading(true);
-    const feed = new WebSocket(baseUrl);
-    feed.onopen = () => {
-      const subscription = {
-        event: "subscribe",
-        channel: "book",
-        symbol: "tBTCUSD",
-        freq: "F0",
-        len: 100,
-      };
-      feed.send(JSON.stringify(subscription));
-    };
-    feed.onmessage = (event) => {
-      let data = JSON.parse(event.data);
-      if (data.constructor.name == "Array") {
-        const [id, dataItems] = data;
-        if (dataItems.length === 3) {
-          setIncomingOrderBookData(dataItems);
-        } else if (dataItems != "hb" && dataItems.length != 0) {
-          setOrderBookInitialData(dataItems);
-        }
-        setLoading(false);
-      }
-    };
-  };
+
   if (loading || bids.length == 0 || asks.length == 0) {
     return (
       <div className={classes.loading__container}>
@@ -118,11 +90,9 @@ const Home: NextPage = () => {
         style={{
           display: "flex",
           justifyContent: "center",
-          marginTop: "100px",
         }}
       >
-        <OrderBook data={bids} />
-        <OrderBook data={asks} />
+        <OrderBook bids={bids} asks={asks} />
       </div>
     </div>
   );

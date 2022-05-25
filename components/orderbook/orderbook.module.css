@@ -1,0 +1,9 @@
+.orderbook {
+  display: flex;
+  justify-content: center;
+  margin-top: 100px;
+}
+.table{
+  border: 2px solid black;
+  width: 100%;
+}
